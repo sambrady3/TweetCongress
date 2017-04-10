@@ -1,3 +1,5 @@
+import json, requests
+
 class Tweet:
 	"""Represents a Tweet. Stores the body of a Tweet, 
 	and the username associated with the Tweet."""
@@ -17,5 +19,30 @@ class CongressAPICommunicator:
 	"""Handles all communications with Congressional API.
 	This includes fetching and parsing representatives by zip code, daily schedules, and live vote updates."""
 
-	# def fetch_by_zipcode(zipcode):
+	def fetch_by_zipcode(zipcode):
+		reps = []
+
 		# TODO: This should return a list of Representative objects
+		url = 'https://congress.api.sunlightfoundation.com/legislators/locate?zip={}'.format(zipcode)
+
+		r = requests.get(url)
+
+		info = r.json()
+
+		#Finding the number of representatives
+		NumOfRep = info['count']
+
+		# Getting every Rep fist & last names
+		for i in range(NumOfRep):
+			representative = Representive()
+			representative.first = info['results'][i]['first_name']
+			representative.last = info['results'][i]['last_name']
+			representative.chamber = info['results'][i]['chamber']
+			reps.append(representative)
+		return reps
+
+class Representive:
+	def__init__(self, first, last, chamber):
+		self.first = first
+		self.last = last
+		self.chamber
