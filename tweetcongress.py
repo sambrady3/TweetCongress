@@ -15,6 +15,39 @@ class Tweet:
 	# def parse_message(raw_tweet):
 		#"""Parses a raw tweet (JSON format) and returns the zip code requested by the user."""
 
+	
+class TweetCreator:
+
+	@classmethod
+	def make_zipcode_response(reps):
+		n = len(reps)
+		body = "There are %d people who serve that zip code." % n
+		strs = []
+		for i, rep in enumerate(reps):
+			s = "%d: %s %s, Facebook ID: @%s, official email: %s. " \
+				% (i, rep.first_name, rep.last_name, rep.facebook, rep.email)
+			strs.append(s)
+		body += "".join(strs)
+		return Tweet(username, body)
+
+	@classmethod
+	def daily_schedule(s):
+
+		body = "On %s, %s(%s) is going to be held by %s" \
+			%(s.date, s.name, s.type, s.house_of_congress)
+
+	@classmethod
+	def make_vote_result(v):
+
+		if v.passed:
+			result = "passed"
+		else:
+			result = "rejected"
+		body = "On %s, with %d Congressmen voted yes and %d voted no, \
+		the Bill %s is %s" \
+		% (v.date, v.yes_votes, v.no_votes,v.bill_name, result)
+	
+		
 class CongressAPICommunicator:
 	"""Handles all communications with Congressional API.
 	This includes fetching and parsing representatives by zip code, daily schedules, and live vote updates."""
@@ -47,3 +80,20 @@ class Representive:
 		self.first = first
 		self.last = last
 		self.chamber = chamber
+		
+
+class Vote:
+	def __init__(self, name, yes, no, passed, date):
+		self.bill_name = name
+		self.yes_votes = yes
+		self.no_votes = no
+		self.passed = passed
+		self.date = date
+
+
+class Event:
+	def __init__(self, name, house_of_congress, date, typ):
+		self.name = name
+		self.house_of_congress = house_of_congress
+		self.date = date
+		self.type = typ
