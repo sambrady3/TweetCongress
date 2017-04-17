@@ -8,14 +8,21 @@ class Tweet:
 		self.username = username
 		self.body = body
 
+	def __repr__(self):
+		return (self.username + self.body)
+
+	def __str__(self):
+		return (self.username + self.body)
+
 class TwitterAPICommunicator:
 	#"""Handles all communications with the Twitter API.
 	#This includes both posting Tweets, and listening for and receiving Tweets."""
 
-	def tweet_to_zipcode(txt):
+	@classmethod
+	def tweet_to_zipcode(self, txt):
 		tweet_bot_id = '@TweetAtCongress '
 		id_len = len(tweet_bot_id)
-		body = tweet_bot_id[id_len:]
+		body = txt[id_len:]
 		txt_len = len(body)
 
 		if txt_len < 5:
@@ -33,13 +40,14 @@ class TwitterAPICommunicator:
 class TweetCreator:
 
 	@classmethod
-	def make_zipcode_response(reps):
+	def make_zipcode_response(self, reps, username):
+		print("Reps:", reps)
 		n = len(reps)
-		body = "There are %d people who serve that zip code." % n
+		# body = "There are %d people who serve that zip code." % n
+		body = "@"
 		strs = []
 		for i, rep in enumerate(reps):
-			s = "%d: %s %s, Facebook ID: @%s, official email: %s. " \
-				% (i, rep.first_name, rep.last_name, rep.facebook, rep.email)
+			s = "%d: %s %s" % (i, rep.first, rep.last)
 			strs.append(s)
 		body += "".join(strs)
 		return Tweet(username, body)
@@ -66,7 +74,8 @@ class CongressAPICommunicator:
 	"""Handles all communications with Congressional API.
 	This includes fetching and parsing representatives by zip code, daily schedules, and live vote updates."""
 
-	def fetch_by_zipcode(zipcode):
+	@classmethod
+	def fetch_by_zipcode(self, zipcode):
 		reps = []
 
 		# TODO: This should return a list of Representative objects
