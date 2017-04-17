@@ -36,6 +36,13 @@ class TwitterAPICommunicator:
 				return False
 		#"""Parses a raw tweet (JSON format) and returns the zip code requested by the user."""
 
+	@classmethod
+	def send_tweet(self, tweet, connection, tweetId):
+		body = tweet.body
+		username = "@" + tweet.username
+		text = username + " " + body
+		connection.update_status(status=text, in_reply_to_status_id=tweetId) 
+
 	
 class TweetCreator:
 
@@ -44,10 +51,10 @@ class TweetCreator:
 		print("Reps:", reps)
 		n = len(reps)
 		# body = "There are %d people who serve that zip code." % n
-		body = "@"
+		body = "\n"
 		strs = []
 		for i, rep in enumerate(reps):
-			s = "%d: %s %s" % (i, rep.first, rep.last)
+			s = "%s %s (%s)\n" % (rep.first, rep.last, rep.chamber[0])
 			strs.append(s)
 		body += "".join(strs)
 		return Tweet(username, body)
@@ -93,6 +100,7 @@ class CongressAPICommunicator:
 			first = info['results'][i]['first_name']
 			last = info['results'][i]['last_name']
 			chamber = info['results'][i]['chamber']
+			chamber = chamber[0].upper() + chamber[1:]
 			representative = Representive(first, last, chamber)
 
 			reps.append(representative)
