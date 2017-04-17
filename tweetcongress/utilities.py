@@ -8,11 +8,15 @@ class Tweet:
 		self.username = username
 		self.body = body
 
-# class TwitterAPICommunicator:
+class TwitterAPICommunicator:
 	#"""Handles all communications with the Twitter API.
 	#This includes both posting Tweets, and listening for and receiving Tweets."""
 
-	# def parse_message(raw_tweet):
+	def parse_message(txt):
+		txt_len = len(txt)
+
+		if txt_len >= 5:
+			
 		#"""Parses a raw tweet (JSON format) and returns the zip code requested by the user."""
 
 	
