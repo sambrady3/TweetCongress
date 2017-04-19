@@ -50,7 +50,6 @@ class TweetCreator:
 	def make_zipcode_response(self, reps, username):
 		print("Reps:", reps)
 		n = len(reps)
-		# body = "There are %d people who serve that zip code." % n
 		body = "\n"
 		strs = []
 		for i, rep in enumerate(reps):
@@ -60,10 +59,17 @@ class TweetCreator:
 		return Tweet(username, body)
 
 	@classmethod
-	def daily_schedule(s):
+	def make_schedule_response(self, bills, username):
 
-		body = "On %s, %s(%s) is going to be held by %s" \
-			%(s.date, s.name, s.type, s.house_of_congress)
+		body = "Today's Schedule\n"
+
+		for bill in bills:
+			body += bill.id + " " + bill.url + "\n"
+
+		# body = "On %s, %s(%s) is going to be held by %s" \
+		# 	%(s.date, s.name, s.type, s.house_of_congress)
+
+		return Tweet(username, body)
 
 	@classmethod
 	def make_vote_result(v):
@@ -89,14 +95,13 @@ class CongressAPICommunicator:
 		url = 'https://congress.api.sunlightfoundation.com/legislators/locate?zip={}'.format(zipcode)
 
 		r = requests.get(url)
-
 		info = r.json()
 
 		#Finding the number of representatives
-		NumOfRep = info['count']
+		numOfRep = info['count']
 
 		# Getting every Rep fist & last names
-		for i in range(NumOfRep):
+		for i in range(numOfRep):
 			first = info['results'][i]['first_name']
 			last = info['results'][i]['last_name']
 			chamber = info['results'][i]['chamber']
@@ -105,6 +110,37 @@ class CongressAPICommunicator:
 
 			reps.append(representative)
 		return reps
+
+	@classmethod
+	def schedule_for_day(self, date):
+		# TODO: deal with formatting of date
+		# needs to be YYYY-MM-DD
+
+		# need to deal with formatting of tweet. Links with bill_id?
+
+		bills = []
+
+		url = 'https://congress.api.sunlightfoundation.com/upcoming_bills?legislative_day={}'.format(date)
+
+		r = requests.get(url)
+		info = r.json()
+
+		# num_of_bills = info['count']
+		num_of_bills = 3
+
+		for i in range(num_of_bills):
+			bill = info['results'][i]
+			bill_id = bill['bill_id']
+			chamber = bill['chamber']
+			chamber = chamber[0].upper() + chamber[1:]
+			description = bill['description']
+			bill_url = bill['bill_url']
+
+			bills.append(Bill(bill_id, chamber, date, bill_url))
+
+		return bills
+
+
 
 class Representive:
 	def __init__(self, first, last, chamber):
@@ -122,9 +158,9 @@ class Vote:
 		self.date = date
 
 
-class Event:
-	def __init__(self, name, house_of_congress, date, typ):
-		self.name = name
+class Bill:
+	def __init__(self, bill_id, house_of_congress, date, url):
+		self.id = bill_id
 		self.house_of_congress = house_of_congress
 		self.date = date
-		self.type = typ
+		self.url = url
