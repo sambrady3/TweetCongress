@@ -24,26 +24,30 @@ class TweetCongressListener(tweepy.StreamListener):
 
         print(tweetText)
 
-        # parse the zipcode out
-        zipcode = TwitterAPICommunicator.tweet_to_zipcode(tweetText)
-        print("zipcode from 'tweet_to_zipcode': ", zipcode)
+        tweet_bot_id = '@TweetAtCongress '
+        id_len = len(tweet_bot_id)
+        body = tweetText[id_len:]
+        txt_len = len(body)
+        if body[:8] == "schedule":
+            date = body[9:]
+            bills = CongressAPICommunicator.schedule_for_day(date)
+            schedule_response = TweetCreator.make_schedule_response(bills, screenName)
+            TwitterAPICommunicator.send_tweet(schedule_response, api, tweetId)     
+        else:    
+            # parse the zipcode out
+            zipcode = TwitterAPICommunicator.tweet_to_zipcode(tweetText)
+            print("zipcode from 'tweet_to_zipcode': ", zipcode)
 
-        if not zipcode:
-            zipcode_response = Tweet(screenName, "We were unable to find a zipcode in your Tweet. Make sure you're sending us exactly 5 digits and nothing else.")
-        else:
-            reps = CongressAPICommunicator.fetch_by_zipcode(zipcode)
-            if not reps:
-                zipcode_response = Tweet(screenName, "We were unable to find any representatives for that zipcode.")
+            if not zipcode:
+                zipcode_response = Tweet(screenName, "We were unable to find a zipcode in your Tweet. Make sure you're sending us exactly 5 digits and nothing else.")
             else:
-                zipcode_response = TweetCreator.make_zipcode_response(reps, screenName)
+                reps = CongressAPICommunicator.fetch_by_zipcode(zipcode)
+                if not reps:
+                    zipcode_response = Tweet(screenName, "We were unable to find any representatives for that zipcode.")
+                else:
+                    zipcode_response = TweetCreator.make_zipcode_response(reps, screenName)
 
-        # # check if repsonse is over 140 char
-        # if len(replyText) > 140:
-        #     replyText = replyText[:137] + '...'
-
-        # # instead of calling this directly, probably call some other method (TweetCreator) that calls this
-        # api.update_status(status=replyText, in_reply_to_status_id=tweetId)   
-        TwitterAPICommunicator.send_tweet(zipcode_response, api, tweetId)         
+            TwitterAPICommunicator.send_tweet(zipcode_response, api, tweetId)         
 
     def on_error(self, status):
         print(status)
