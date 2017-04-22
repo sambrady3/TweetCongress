@@ -77,12 +77,11 @@ class TweetCreator:
 
 	@staticmethod
 	def make_floor_update(update):
-		body = u"At {} in the {}\n{}".format(update.timestamp.format('HH:mm'), update.chamber, update.update) 
+		body = u"At {} in the {}\n{}".format(update.timestamp.format('HH:mm'), 
+			update.chamber, update.update) 
 
 		if len(body) > 140:
 			body = body[:139] + u'\u2026'
-
-		print(len(body))
 
 		return Tweet("", body)
 
@@ -158,8 +157,7 @@ class CongressAPICommunicator:
 		URL = """https://congress.api.sunlightfoundation.com/floor_updates?order=timestamp"""
 		r = requests.get(URL)
 		info = r.json()
-		# num_of_updates = info['count']
-		num_of_updates = 20
+		num_of_updates = info['page']['count']
 		floor_updates = []
 
 		for i in range(num_of_updates):
@@ -201,7 +199,6 @@ class Representative:
 		self.chamber = chamber
 		self.district = district
 
-
 class Vote:
 	def __init__(self, roll_id, chamber, timestamp, question, result):
 		self.roll_id = roll_id
@@ -210,7 +207,6 @@ class Vote:
 		self.question = question
 		self.result = result
 
-
 class FloorUpdate:
 	def __init__(self, update, timestamp, date, chamber):
 		self.update = update
@@ -218,10 +214,38 @@ class FloorUpdate:
 		self.date = date
 		self.chamber = chamber
 
-
 class Bill:
 	def __init__(self, bill_id, house_of_congress, date, url):
 		self.id = bill_id
 		self.house_of_congress = house_of_congress
 		self.date = date
 		self.url = url
+
+def group_bills(bills):
+	groups = []
+	if len(bills) >= 3:
+		groups.append(bills[:3])
+	else:
+
+	rest = bills[3:]
+	while True:
+		if len(rest) >= 4:
+			groups.append(rest[:4])
+			rest = rest[4:]
+		elif len(rest) > 0:
+			groups.append(rest)
+			break
+		else:
+			break
+	return groups
+
+def bills_to_tweet(bills, index, total):
+	if index == 0: 
+		body = "Schedule for date {}".format(bills[0].date)
+	else: # len(bills) == anything
+		body = ""
+		for bill in bills:
+			body += bill.id
+	body += "({}/{})".format(index+1, total)
+
+	return Tweet()
