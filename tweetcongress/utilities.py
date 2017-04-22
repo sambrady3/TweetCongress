@@ -18,8 +18,8 @@ class TwitterAPICommunicator:
 	#"""Handles all communications with the Twitter API.
 	#This includes both posting Tweets, and listening for and receiving Tweets."""
 
-	@classmethod
-	def tweet_to_zipcode(self, txt):
+	@staticmethod
+	def tweet_to_zipcode(txt):
 		tweet_bot_id = '@TweetAtCongress '
 		id_len = len(tweet_bot_id)
 		body = txt[id_len:]
@@ -36,8 +36,8 @@ class TwitterAPICommunicator:
 				return False
 		#"""Parses a raw tweet (JSON format) and returns the zip code requested by the user."""
 
-	@classmethod
-	def send_tweet(self, tweet, connection, tweetId):
+	@staticmethod
+	def send_tweet(tweet, connection, tweetId):
 		body = tweet.body
 		username = "@" + tweet.username
 		text = username + " " + body
@@ -46,8 +46,8 @@ class TwitterAPICommunicator:
 	
 class TweetCreator:
 
-	@classmethod
-	def make_zipcode_response(self, reps, username):
+	@staticmethod
+	def make_zipcode_response(reps, username):
 		print("Reps:", reps)
 		n = len(reps)
 		body = "\n"
@@ -58,8 +58,8 @@ class TweetCreator:
 		body += "".join(strs)
 		return Tweet(username, body)
 
-	@classmethod
-	def make_schedule_response(self, bills, username):
+	@staticmethod
+	def make_schedule_response(bills, username):
 
 		body = "Today's Schedule\n"
 
@@ -71,7 +71,7 @@ class TweetCreator:
 
 		return Tweet(username, body)
 
-	@classmethod
+	@staticmethod
 	def make_vote_result(v):
 
 		if v.passed:
@@ -87,20 +87,18 @@ class CongressAPICommunicator:
 	"""Handles all communications with Congressional API.
 	This includes fetching and parsing representatives by zip code, daily schedules, and live vote updates."""
 
-	@classmethod
-	def fetch_by_zipcode(self, zipcode):
+	@staticmethod
+	def fetch_by_zipcode(zipcode):
 		reps = []
 
-		# TODO: This should return a list of Representative objects
 		url = 'https://congress.api.sunlightfoundation.com/legislators/locate?zip={}'.format(zipcode)
-
 		r = requests.get(url)
 		info = r.json()
 
 		#Finding the number of representatives
 		numOfRep = info['count']
 
-		# Getting every Rep fist & last names
+		# Getting every Rep first & last names
 		for i in range(numOfRep):
 			first = info['results'][i]['first_name']
 			last = info['results'][i]['last_name']
@@ -111,8 +109,8 @@ class CongressAPICommunicator:
 			reps.append(representative)
 		return reps
 
-	@classmethod
-	def schedule_for_day(self, date):
+	@staticmethod
+	def schedule_for_day(date):
 		# TODO: deal with formatting of date
 		# needs to be YYYY-MM-DD
 
@@ -139,6 +137,7 @@ class CongressAPICommunicator:
 			bills.append(Bill(bill_id, chamber, date, bill_url))
 
 		return bills
+
 
 class Representative:
 	def __init__(self, first, last, chamber):
