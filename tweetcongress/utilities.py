@@ -1,4 +1,4 @@
-import json, requests
+import json, requests, arrow
 
 class Tweet:
 	"""Represents a Tweet. Stores the body of a Tweet, 
@@ -39,8 +39,10 @@ class TwitterAPICommunicator:
 	@staticmethod
 	def send_tweet(tweet, connection, tweetId):
 		body = tweet.body
-		username = "@" + tweet.username
-		text = username + " " + body
+		if tweet.username:
+			text = '@' + tweet.username + " " + body
+		else:
+			text = body
 		connection.update_status(status=text, in_reply_to_status_id=tweetId) 
 
 	
@@ -60,27 +62,37 @@ class TweetCreator:
 
 	@staticmethod
 	def make_schedule_response(bills, username):
+		date = bills[0].date
+		tweets = []
 
-		body = "Today's Schedule\n"
+		body = "Schedule for {}:\n".format(date)
 
 		for bill in bills:
 			body += bill.id + " " + bill.url + "\n"
 
-		# body = "On %s, %s(%s) is going to be held by %s" \
-		# 	%(s.date, s.name, s.type, s.house_of_congress)
-
 		return Tweet(username, body)
 
 	@staticmethod
-	def make_vote_result(v):
+	def make_floor_update(update):
+		body = u"At {} in the {}\n{}".format(update.timestamp.format('HH:mm'), update.chamber, update.update) 
 
-		if v.passed:
-			result = "passed"
-		else:
-			result = "rejected"
-		body = "On %s, with %d Congressmen voted yes and %d voted no, \
-		the Bill %s is %s" \
-		% (v.date, v.yes_votes, v.no_votes,v.bill_name, result)
+		if len(body) > 140:
+			body = body[:139] + u'\u2026'
+
+		print(len(body))
+
+		return Tweet("", body)
+
+	@staticmethod
+	def make_vote(vote):
+		body = u"{} VOTE RESULT\n{}: {}".format(vote.chamber.upper(), vote.question, vote.result) 
+
+		if len(body) > 140:
+			body = body[:139] + u'\u2026'
+
+		print(len(body))
+
+		return Tweet("", body)
 	
 		
 class CongressAPICommunicator:
@@ -123,20 +135,59 @@ class CongressAPICommunicator:
 		r = requests.get(url)
 		info = r.json()
 
-		# num_of_bills = info['count']
-		num_of_bills = 3
+		num_of_bills = info['count']
+		# num_of_bills = 3
 
 		for i in range(num_of_bills):
 			bill = info['results'][i]
 			bill_id = bill['bill_id']
 			chamber = bill['chamber']
 			chamber = chamber[0].upper() + chamber[1:]
-			description = bill['description']
 			bill_url = bill['bill_url']
 
 			bills.append(Bill(bill_id, chamber, date, bill_url))
 
 		return bills
+
+	@staticmethod
+	def get_floor_updates():
+		URL = """https://congress.api.sunlightfoundation.com/floor_updates?order=timestamp"""
+		r = requests.get(URL)
+		info = r.json()
+		# num_of_updates = info['count']
+		num_of_updates = 20
+		floor_updates = []
+
+		for i in range(num_of_updates):
+			raw_update = info['results'][i]
+			update = raw_update['update']
+			timestamp = arrow.get(raw_update['timestamp'])
+			date = raw_update['legislative_day']
+			chamber = raw_update['chamber']
+			chamber = chamber[0].upper() + chamber[1:]
+			floor_updates.append(FloorUpdate(update, timestamp, date, chamber))
+
+		return sorted(floor_updates, key=lambda upd: upd.timestamp)
+
+	@staticmethod
+	def get_votes():
+		URL = """https://congress.api.sunlightfoundation.com/votes?order=voted_at"""
+		r = requests.get(URL)
+		info = r.json()
+		# num_of_updates = info['count']
+		num_of_votes = 20 # number that fits on one page. only check most current page
+		votes = []
+
+		for i in range(num_of_votes):
+			vote = info['results'][i]
+			roll_id = vote['roll_id']
+			chamber = vote['chamber']
+			timestamp = arrow.get(vote['voted_at'])
+			question = vote['question']
+			result = vote['result']
+			votes.append(Vote(roll_id, chamber, timestamp, question, result))
+
+		return sorted(votes, key=lambda upd: upd.timestamp)
 
 
 class Representative:
@@ -147,12 +198,20 @@ class Representative:
 		
 
 class Vote:
-	def __init__(self, name, yes, no, passed, date):
-		self.bill_name = name
-		self.yes_votes = yes
-		self.no_votes = no
-		self.passed = passed
+	def __init__(self, roll_id, chamber, timestamp, question, result):
+		self.roll_id = roll_id
+		self.chamber = chamber
+		self.timestamp = timestamp
+		self.question = question
+		self.result = result
+
+
+class FloorUpdate:
+	def __init__(self, update, timestamp, date, chamber):
+		self.update = update
+		self.timestamp = timestamp
 		self.date = date
+		self.chamber = chamber
 
 
 class Bill:
