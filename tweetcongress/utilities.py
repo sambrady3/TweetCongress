@@ -1,5 +1,4 @@
-import json, requests, arrow
-
+import json, requests
 class Tweet:
 	"""Represents a Tweet. Stores the body of a Tweet, 
 	and the username associated with the Tweet."""
@@ -65,15 +64,18 @@ class TweetCreator:
 
 	@staticmethod
 	def make_schedule_response(bills, username):
-		date = bills[0].date
 		tweets = []
+		groups = []
 
-		body = "Schedule for {}:\n".format(date)
+		body = "Schedule for {}:\n".format(bills[0].date)
+		groups = group_bills(bills)
 
-		for bill in bills:
-			body += bill.id + " " + bill.url + "\n"
+		for i in range(len(groups)):
+			group = groups[i]
+			body = bills_to_tweet(group, i, len(groups))
+			tweets.append(Tweet(username, body))
 
-		return Tweet(username, body)
+		return tweets
 
 	@staticmethod
 	def make_floor_update(update):
@@ -223,11 +225,12 @@ class Bill:
 
 def group_bills(bills):
 	groups = []
+	rest = []
 	if len(bills) >= 3:
 		groups.append(bills[:3])
+		rest = bills[3:]
 	else:
-
-	rest = bills[3:]
+		groups.append(bills)
 	while True:
 		if len(rest) >= 4:
 			groups.append(rest[:4])
@@ -240,12 +243,13 @@ def group_bills(bills):
 	return groups
 
 def bills_to_tweet(bills, index, total):
+	date = bills[0].date
 	if index == 0: 
-		body = "Schedule for date {}".format(bills[0].date)
+		body = "Schedule for date {}:\n".format(date)
 	else: # len(bills) == anything
 		body = ""
-		for bill in bills:
-			body += bill.id
+	for bill in bills:
+		body += bill.id + " " + bill.url + "\n"
 	body += "({}/{})".format(index+1, total)
 
-	return Tweet()
+	return body
