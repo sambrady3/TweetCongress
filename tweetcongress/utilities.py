@@ -119,7 +119,7 @@ class CongressAPICommunicator:
 			last = info['results'][i]['last_name']
 			chamber = info['results'][i]['chamber']
 			chamber = chamber[0].upper() + chamber[1:]
-			district = info['results']['i']['district']
+			district = info['results'][i]['district']
 			representative = Representative(first, last, chamber, district)
 
 			reps.append(representative)
@@ -200,7 +200,7 @@ class Representative:
 		self.last = last
 		self.chamber = chamber
 		self.district = district
-		
+
 
 class Vote:
 	def __init__(self, roll_id, chamber, timestamp, question, result):
