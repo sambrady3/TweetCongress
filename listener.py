@@ -21,28 +21,23 @@ class TweetCongressListener(tweepy.StreamListener):
         tweetText = tweet.get('text')
         screenName = tweet.get('user',{}).get('screen_name')
         tweetId = tweet.get('id_str')
-
-        print(tweetText)
-
         tweet_bot_id = '@TweetAtCongress '
         id_len = len(tweet_bot_id)
         body = tweetText[id_len:]
         txt_len = len(body)
-        if body[:8] == "schedule":
+        if body[:8] == "schedule": # Schedule request
             date = body[9:]
             bills = CongressAPICommunicator.schedule_for_day(date)
             schedule_response = TweetCreator.make_schedule_response(bills, screenName)
             TwitterAPICommunicator.send_tweet(schedule_response, api, tweetId)     
-        else:    
-            # parse the zipcode out
+        else: # zipcode request
             zipcode = TwitterAPICommunicator.tweet_to_zipcode(tweetText)
-            print("zipcode from 'tweet_to_zipcode': ", zipcode)
-
-            if not zipcode:
-                zipcode_response = Tweet(screenName, "We were unable to find a zipcode in your Tweet. Make sure you're sending us exactly 5 digits and nothing else.")
+            if not zipcode: # Couldn't parse the user's tweet for a zipcode
+                zipcode_response = Tweet(screenName, """We were unable to find a zipcode in your Tweet. 
+                    Make sure you're sending us exactly 5 digits and nothing else.""")
             else:
                 reps = CongressAPICommunicator.fetch_by_zipcode(zipcode)
-                if not reps:
+                if not reps: # Couldn't find any representatives
                     zipcode_response = Tweet(screenName, "We were unable to find any representatives for that zipcode.")
                 else:
                     zipcode_response = TweetCreator.make_zipcode_response(reps, screenName)
