@@ -116,7 +116,8 @@ class CongressAPICommunicator:
 			last = info['results'][i]['last_name']
 			chamber = info['results'][i]['chamber']
 			chamber = chamber[0].upper() + chamber[1:]
-			representative = Representative(first, last, chamber)
+			district = info['results']['i']['district']
+			representative = Representative(first, last, chamber, district)
 
 			reps.append(representative)
 		return reps
@@ -191,10 +192,11 @@ class CongressAPICommunicator:
 
 
 class Representative:
-	def __init__(self, first, last, chamber):
+	def __init__(self, first, last, chamber, district):
 		self.first = first
 		self.last = last
 		self.chamber = chamber
+		self.district = district
 		
 
 class Vote:
