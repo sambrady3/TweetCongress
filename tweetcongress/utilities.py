@@ -55,7 +55,10 @@ class TweetCreator:
 		body = "\n"
 		strs = []
 		for i, rep in enumerate(reps):
-			s = "%s %s (%s)\n" % (rep.first, rep.last, rep.chamber[0])
+			if rep.chamber == "House":
+				s = "%s %s (%s) District %d\n" % (rep.first, rep.last, rep.chamber[0], rep.district)
+			else:
+ 				s = "%s %s (%s)\n" % (rep.first, rep.last, rep.chamber[0])
 			strs.append(s)
 		body += "".join(strs)
 		return Tweet(username, body)
